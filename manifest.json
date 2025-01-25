@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "SNR Calculator",
+    "version": "1.0",
+    "description": "Calculate Signal-to-Noise Ratio of webpage text",
+    "permissions": [
+      "activeTab",
+      "scripting",
+      "tabs"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ],
+    "host_permissions": [
+      "http://*/*",
+      "https://*/*"
+    ],
+    "web_accessible_resources": [{
+        "resources": ["debug/*"],
+        "matches": ["<all_urls>"]
+    }],
+    "action": {}
+  }

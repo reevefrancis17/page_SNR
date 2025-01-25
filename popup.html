@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="popup.js"></script>
+  <style>
+    body {
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    
+    #getSNR {
+      background-color: black;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    #getSNR:hover {
+      background-color: #333;
+    }
+
+    #snrDisplay {
+      background-color: black;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 16px;
+      min-width: 60px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <!-- Button to trigger SNR calculation -->
+  <button id="getSNR">Get SNR</button>
+  <!-- Display for showing SNR percentage -->
+  <div id="snrDisplay">0%</div>
+</body>
+</html>
