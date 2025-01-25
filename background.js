@@ -24,12 +24,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener((request, sender) => {
     if (request.action === "updateSNR" && sender.tab) {
         if (request.snr) {
-            // Update badge with SNR value
-            chrome.action.setBadgeText({
-                text: request.snr,
-                tabId: sender.tab.id
-            });
-            // Set tooltip with detailed info
+            // Only update tooltip, don't change badge
             const tooltip = `SNR: ${request.snr}\n` +
                           `RLE: ${(request.debug.rleRatio * 100).toFixed(1)}%\n` +
                           `Dict: ${(request.debug.dictRatio * 100).toFixed(1)}%\n` +
@@ -39,10 +34,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
                 tabId: sender.tab.id
             });
         } else if (request.error) {
-            chrome.action.setBadgeText({
-                text: 'ERR',
-                tabId: sender.tab.id
-            });
+            // Only update tooltip for errors
             chrome.action.setTitle({
                 title: request.error,
                 tabId: sender.tab.id
@@ -51,5 +43,17 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     }
 });
 
-// Set badge background color
-chrome.action.setBadgeBackgroundColor({ color: '#4a90e2' }); 
+// Initialize badge text
+chrome.action.setBadgeBackgroundColor({ color: '#4CAF50' });
+chrome.action.setBadgeText({ text: '0%' });
+
+// Listen for messages from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'UPDATE_PERCENTAGE') {
+    const percentage = message.percentage;
+    chrome.action.setBadgeText({ 
+      text: `${percentage}%`,
+      tabId: sender.tab.id
+    });
+  }
+}); 

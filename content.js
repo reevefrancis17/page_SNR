@@ -155,3 +155,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     return true;
 });
+
+function calculateAndSendPercentage() {
+  const allText = document.body.innerText;
+  const words = allText.trim().split(/\s+/);
+  const totalWords = words.length;
+  
+  // Calculate what percentage of words are read (you can adjust this logic)
+  const readWords = Math.floor(Math.random() * totalWords); // This is a placeholder
+  const percentage = Math.min(Math.floor((readWords / totalWords) * 100), 100);
+  
+  // Send percentage to background script
+  chrome.runtime.sendMessage({
+    type: 'UPDATE_PERCENTAGE',
+    percentage: percentage
+  });
+}
+
+// Call when page loads
+window.addEventListener('load', calculateAndSendPercentage);
+
+// Also call when page content changes
+const observer = new MutationObserver(calculateAndSendPercentage);
+observer.observe(document.body, { 
+  childList: true, 
+  subtree: true 
+});

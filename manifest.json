@@ -5,8 +5,9 @@
     "description": "Calculate Signal-to-Noise Ratio of webpage text",
     "permissions": [
       "activeTab",
+      "storage",
       "scripting",
-      "tabs"
+      "action"
     ],
     "background": {
       "service_worker": "background.js"
