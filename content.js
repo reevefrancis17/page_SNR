@@ -66,16 +66,11 @@ function geometricMean(numbers) {
 // Main SNR calculation function
 async function calculateSNR(text) {
     try {
-        if (!text) {
+        if (!text || text.trim().length === 0) {
             throw new Error('No input text provided');
         }
 
         // Clean the text
-        chrome.runtime.sendMessage({
-            action: "updateSNR",
-            status: "Cleaning text..."
-        });
-        
         const cleanText = prepareText(text);
 
         if (cleanText.length === 0) {
@@ -91,29 +86,32 @@ async function calculateSNR(text) {
         const rleCompressed = runLengthEncode(cleanText);
         const rleRatio = getCompressionRatio(cleanText, rleCompressed);
         compressionRatios.push(rleRatio);
-        console.log('RLE compression ratio:', rleRatio);
 
         // Dictionary encoding
         const dictCompressed = dictionaryEncode(cleanText);
         const dictRatio = getCompressionRatio(cleanText, dictCompressed);
         compressionRatios.push(dictRatio);
-        console.log('Dictionary compression ratio:', dictRatio);
 
         // Character frequency encoding
         const freqCompressed = characterFrequencyEncode(cleanText);
         const freqRatio = getCompressionRatio(cleanText, freqCompressed);
         compressionRatios.push(freqRatio);
-        console.log('Frequency compression ratio:', freqRatio);
 
         // Calculate geometric mean of compression ratios
         const meanRatio = geometricMean(compressionRatios);
-        console.log('Geometric mean of compression ratios:', meanRatio);
 
-        // Convert to percentage with one decimal place
-        const snr = (meanRatio * 100).toFixed(1);
-        console.log('Final SNR:', snr);
+        // Convert to percentage with appropriate decimal places
+        const snrValue = Math.max(0.1, Math.min(100, meanRatio * 100));
+        let snr;
+        if (snrValue < 1) {
+            // For values less than 1%, show one decimal place
+            snr = snrValue.toFixed(1);
+        } else {
+            // For values 1% and above, round to whole number
+            snr = Math.round(snrValue).toString();
+        }
 
-        // Send debug data
+        // Send debug data with the exact same SNR value
         const debugData = {
             originalLength: cleanText.length,
             rleRatio,
@@ -126,16 +124,25 @@ async function calculateSNR(text) {
 
         // Send final result
         chrome.runtime.sendMessage({
-            action: "updateSNR", 
+            action: "updateSNR",
             snr: snr + '%',
             debug: debugData
         });
 
     } catch (error) {
         console.error('Error in calculateSNR:', error);
+        // Only now do we default to 100% for errors
         chrome.runtime.sendMessage({
             action: "updateSNR",
-            error: error.message
+            snr: '100%',
+            debug: {
+                rleRatio: 1,
+                dictRatio: 1,
+                freqRatio: 1,
+                meanRatio: 1,
+                finalSNR: '100',
+                error: error.message
+            }
         });
     }
 }
@@ -156,28 +163,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
-function calculateAndSendPercentage() {
-  const allText = document.body.innerText;
-  const words = allText.trim().split(/\s+/);
-  const totalWords = words.length;
-  
-  // Calculate what percentage of words are read (you can adjust this logic)
-  const readWords = Math.floor(Math.random() * totalWords); // This is a placeholder
-  const percentage = Math.min(Math.floor((readWords / totalWords) * 100), 100);
-  
-  // Send percentage to background script
-  chrome.runtime.sendMessage({
-    type: 'UPDATE_PERCENTAGE',
-    percentage: percentage
-  });
+// Function to handle text selection
+function handleTextSelection() {
+    const selection = window.getSelection();
+    const selectedText = selection.toString().trim();
+    
+    if (selectedText) {
+        // Calculate SNR for selected text
+        calculateSNR(selectedText);
+    } else {
+        // If no text is selected, revert to full page calculation
+        calculateSNRForFullPage();
+    }
 }
 
-// Call when page loads
-window.addEventListener('load', calculateAndSendPercentage);
+// Calculate SNR for full page
+function calculateSNRForFullPage() {
+    const allText = document.body.innerText;
+    if (allText.trim()) {
+        calculateSNR(allText);
+    }
+}
 
-// Also call when page content changes
-const observer = new MutationObserver(calculateAndSendPercentage);
+// Add selection event listener
+document.addEventListener('mouseup', handleTextSelection);
+document.addEventListener('keyup', (e) => {
+    // Check for selection keyboard events (shift + arrow keys)
+    if (e.shiftKey && (e.key.includes('Arrow') || e.key === 'Home' || e.key === 'End')) {
+        handleTextSelection();
+    }
+});
+
+// Call when page loads
+window.addEventListener('load', calculateSNRForFullPage);
+
+// Also call when page content changes (but not on selection changes)
+const observer = new MutationObserver((mutations) => {
+    // Only recalculate if no text is currently selected
+    if (!window.getSelection().toString().trim()) {
+        calculateSNRForFullPage();
+    }
+});
+
 observer.observe(document.body, { 
-  childList: true, 
-  subtree: true 
+    childList: true, 
+    subtree: true 
 });

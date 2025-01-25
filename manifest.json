@@ -3,6 +3,9 @@
     "name": "SNR Calculator",
     "version": "1.0",
     "description": "Calculate Signal-to-Noise Ratio of webpage text",
+    "icons": {
+        "128": "icons/original_128.png"
+    },
     "permissions": [
       "activeTab",
       "storage",
@@ -26,5 +29,7 @@
         "resources": ["debug/*"],
         "matches": ["<all_urls>"]
     }],
-    "action": {}
-  }
+    "action": {
+        "default_icon": "icons/original_128.png"
+    }
+}
