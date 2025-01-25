@@ -53,9 +53,13 @@ function characterFrequencyEncode(text) {
     return sorted;
 }
 
-// Function to calculate compression ratio
-function getCompressionRatio(original, compressed) {
-    return compressed.length / original.length;
+// Function to calculate SNR (signal divided by noise)
+function calculateSNRValue(original, compressed) {
+    // Signal is what can't be compressed (compressed length)
+    const signal = compressed.length;
+    // Noise is what could be compressed (original - compressed length)
+    const noise = Math.max(0.1, original.length - compressed.length);  // Avoid division by zero
+    return signal / noise;
 }
 
 // Function to calculate geometric mean
@@ -77,41 +81,47 @@ async function calculateSNR(text) {
             throw new Error('No valid text found after cleaning');
         }
 
-        console.log('Starting compression analysis...');
+        console.log('Starting SNR analysis...');
 
-        // Apply different compression algorithms
-        const compressionRatios = [];
+        // Calculate SNR using different methods
+        const snrRatios = [];
 
-        // Run-length encoding
+        // Run-length encoding SNR
         const rleCompressed = runLengthEncode(cleanText);
-        const rleRatio = getCompressionRatio(cleanText, rleCompressed);
-        compressionRatios.push(rleRatio);
+        const rleRatio = calculateSNRValue(cleanText, rleCompressed);
+        snrRatios.push(rleRatio);
 
-        // Dictionary encoding
+        // Dictionary encoding SNR
         const dictCompressed = dictionaryEncode(cleanText);
-        const dictRatio = getCompressionRatio(cleanText, dictCompressed);
-        compressionRatios.push(dictRatio);
+        const dictRatio = calculateSNRValue(cleanText, dictCompressed);
+        snrRatios.push(dictRatio);
 
-        // Character frequency encoding
+        // Character frequency encoding SNR
         const freqCompressed = characterFrequencyEncode(cleanText);
-        const freqRatio = getCompressionRatio(cleanText, freqCompressed);
-        compressionRatios.push(freqRatio);
+        const freqRatio = calculateSNRValue(cleanText, freqCompressed);
+        snrRatios.push(freqRatio);
 
-        // Calculate geometric mean of compression ratios
-        const meanRatio = geometricMean(compressionRatios);
+        // Calculate geometric mean of SNR ratios
+        const meanRatio = geometricMean(snrRatios);
 
-        // Convert to percentage with appropriate decimal places
-        const snrValue = Math.max(0.1, Math.min(100, meanRatio * 100));
+        // Format the display value with 2 significant figures
         let snr;
-        if (snrValue < 1) {
-            // For values less than 1%, show one decimal place
-            snr = snrValue.toFixed(1);
+        if (meanRatio < 1) {
+            // Show as percentage if less than 1
+            const percentage = meanRatio * 100;
+            const magnitude = Math.floor(Math.log10(percentage));
+            const normalized = percentage / Math.pow(10, magnitude);
+            const rounded = Math.round(normalized * 10) / 10;
+            snr = (rounded * Math.pow(10, magnitude)).toFixed(Math.max(0, -magnitude + 1)) + '%';
         } else {
-            // For values 1% and above, round to whole number
-            snr = Math.round(snrValue).toString();
+            // Show as ratio with 2 significant figures if >= 1
+            const magnitude = Math.floor(Math.log10(meanRatio));
+            const normalized = meanRatio / Math.pow(10, magnitude);
+            const rounded = Math.round(normalized * 10) / 10;
+            snr = (rounded * Math.pow(10, magnitude)).toFixed(Math.max(0, -magnitude + 1));
         }
 
-        // Send debug data with the exact same SNR value
+        // Send debug data
         const debugData = {
             originalLength: cleanText.length,
             rleRatio,
@@ -125,22 +135,16 @@ async function calculateSNR(text) {
         // Send final result
         chrome.runtime.sendMessage({
             action: "updateSNR",
-            snr: snr + '%',
+            snr: snr,  // Already includes % if needed
             debug: debugData
         });
 
     } catch (error) {
         console.error('Error in calculateSNR:', error);
-        // Only now do we default to 100% for errors
         chrome.runtime.sendMessage({
             action: "updateSNR",
-            snr: '100%',
+            snr: 'ERR',
             debug: {
-                rleRatio: 1,
-                dictRatio: 1,
-                freqRatio: 1,
-                meanRatio: 1,
-                finalSNR: '100',
                 error: error.message
             }
         });

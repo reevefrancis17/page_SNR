@@ -1,0 +1,30 @@
+Privacy Policy for SNR Calculator Chrome Extension
+
+Last Updated: 2024-03-19
+
+Data Collection and Processing:
+- This extension processes webpage text content locally in your browser to calculate Signal-to-Noise Ratio (SNR).
+- Text content is only processed when you are actively using the extension on the current tab.
+- We process two types of text:
+  1. Full webpage content when the extension is activated
+  2. Selected text when you highlight specific portions of a page
+
+Data Storage and Transmission:
+- All processing is done locally in your browser
+- No data is collected, stored, or transmitted to external servers
+- No personal information is gathered
+- No browsing history is tracked
+
+Permissions:
+The extension requires minimal permissions:
+- activeTab: To access the current tab's content when the extension is used
+- scripting: To calculate SNR on the current webpage
+- storage: For extension settings
+- action: For the extension's toolbar icon
+
+Changes to Privacy Policy:
+Any changes to this privacy policy will be reflected in this document and the version date will be updated.
+
+Contact:
+For questions about this privacy policy, please file an issue in our GitHub repository:
+https://github.com/reevefr/page_SNR 
