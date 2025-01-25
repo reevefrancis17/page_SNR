@@ -27,4 +27,6 @@ Any changes to this privacy policy will be reflected in this document and the ve
 
 Contact:
 For questions about this privacy policy, please file an issue in our GitHub repository:
-https://github.com/reevefr/page_SNR 
+https://github.com/reevefrancis17/page_SNR 
+Or contact the developer at:
+reevefrancis4work@gmail.com
